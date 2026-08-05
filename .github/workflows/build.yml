@@ -7,28 +7,30 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
-      - name: Install Theos & SDKs
+      - name: Build DEB
         run: |
-          git clone --recursive https://github.com/theos/theos.git ~/theos
-          curl -LO https://github.com/theos/sdks/archive/master.zip
-          unzip master.zip
-          mv sdks-master/* ~/theos/sdks/
-
-      - name: Build Package
-        run: |
-          export THEOS=~/theos
-          make package FINALPACKAGE=1 ADDITIONAL_OBJCCFLAGS="-Wno-error -Wno-objc-method-access"
-        continue-on-error: true
+          mkdir -p build/DEBIAN
+          mkdir -p build/usr/libexec/stash933
+          
+          # Копируем служебные файлы пакета
+          cp -r DEBIAN/* build/DEBIAN/
+          
+          # Копируем бинарник и исходники в структуру
+          cp csstashedappexecutable build/usr/libexec/stash933/ || true
+          cp *.mm build/usr/libexec/stash933/ || true
+          cp *.h build/usr/libexec/stash933/ || true
+          
+          # Выставляем права и собираем deb
+          chmod -R 755 build/DEBIAN
+          dpkg-deb --build --root-owner-group build package.deb
 
       - name: Upload DEB
         uses: actions/upload-artifact@v4
         with:
           name: stashing-deb
-          path: packages/*.deb
+          path: package.deb
