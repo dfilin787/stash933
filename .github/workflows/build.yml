@@ -17,10 +17,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential curl git make
           git clone --recursive https://github.com/theos/theos.git /opt/theos
+          curl -LO https://github.com/theos/sdks/releases/download/v13.0/iPhoneOS13.0.sdk.tar.xz
+          mkdir -p /opt/theos/sdks
+          tar -xf iPhoneOS13.0.sdk.tar.xz -C /opt/theos/sdks/
+          rm iPhoneOS13.0.sdk.tar.xz
 
       - name: Build Package
         run: |
-          /opt/theos/bin/make package FINALPACKAGE=1 THEOS=/opt/theos
+          export THEOS=/opt/theos
+          make -f Makefile package FINALPACKAGE=1
 
       - name: Upload DEB Artifact
         uses: actions/upload-artifact@v4
