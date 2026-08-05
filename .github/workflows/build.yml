@@ -7,33 +7,21 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare Package Structure
+      - name: Setup Theos
         run: |
-          mkdir -p package_root/DEBIAN
-          mkdir -p package_root/usr/libexec/stash933
+          git clone --recursive https://github.com/theos/theos.git ~/theos
 
-          # Копируем control в системную папку пакета
-          cp control package_root/DEBIAN/
-
-          # Копируем остальные файлы репозитория в структуру
-          cp csstashedappexecutable package_root/usr/libexec/stash933/ || true
-          cp *.mm package_root/usr/libexec/stash933/ || true
-          cp *.h package_root/usr/libexec/stash933/ || true
-
-          # Задаем правильные права
-          chmod -R 755 package_root/DEBIAN
-
-      - name: Build DEB
+      - name: Build Package
         run: |
-          mkdir -p packages
-          dpkg-deb --build package_root packages/com.coolstar.stashing_1.5.0_iphoneos-arm.deb
+          export THEOS=~/theos
+          $THEOS/bin/make package FINALPACKAGE=1
 
-      - name: Upload DEB Artifact
+      - name: Upload DEB
         uses: actions/upload-artifact@v4
         with:
           name: stashing-deb
