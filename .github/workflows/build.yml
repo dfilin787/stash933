@@ -7,21 +7,20 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-13
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
-      - name: Setup Theos
-        uses: theos/setup-theos@v1
+      - name: Install Dependencies & Theos
+        run: |
+          brew install make
+          git clone --recursive https://github.com/theos/theos.git ~/theos
 
       - name: Build Package
         run: |
-          make package FINALPACKAGE=1
-        env:
-          THEOS: ${{ env.THEOS }}
+          export THEOS=~/theos
+          $THEOS/bin/make package FINALPACKAGE=1
 
       - name: Upload DEB Artifact
         uses: actions/upload-artifact@v4
