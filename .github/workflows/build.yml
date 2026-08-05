@@ -8,15 +8,30 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/theos/theos:latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build Package
+      - name: Prepare Package Structure
         run: |
-          make package FINALPACKAGE=1
+          mkdir -p package_root/DEBIAN
+          mkdir -p package_root/usr/libexec/stash933
+
+          # Копируем control в системную папку пакета
+          cp control package_root/DEBIAN/
+
+          # Копируем остальные файлы репозитория в структуру
+          cp csstashedappexecutable package_root/usr/libexec/stash933/ || true
+          cp *.mm package_root/usr/libexec/stash933/ || true
+          cp *.h package_root/usr/libexec/stash933/ || true
+
+          # Задаем правильные права
+          chmod -R 755 package_root/DEBIAN
+
+      - name: Build DEB
+        run: |
+          mkdir -p packages
+          dpkg-deb --build package_root packages/com.coolstar.stashing_1.5.0_iphoneos-arm.deb
 
       - name: Upload DEB Artifact
         uses: actions/upload-artifact@v4
