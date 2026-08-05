@@ -11,15 +11,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - name: Setup Theos
+      - name: Install Theos & SDKs
         run: |
           git clone --recursive https://github.com/theos/theos.git ~/theos
+          curl -LO https://github.com/theos/sdks/archive/master.zip
+          unzip master.zip
+          mv sdks-master/* ~/theos/sdks/
 
       - name: Build Package
         run: |
           export THEOS=~/theos
-          $THEOS/bin/make package FINALPACKAGE=1
+          make package FINALPACKAGE=1
 
       - name: Upload DEB
         uses: actions/upload-artifact@v4
